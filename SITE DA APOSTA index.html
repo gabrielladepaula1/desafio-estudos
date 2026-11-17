@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desafio de Estudos · Gabi x Vinicius</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{
+  --bg:#0f0f1a; --card:#1a1a2e; --card2:#22223a; --txt:#f2f2f7; --mut:#9a9ab0;
+  --g:#ff6b9d; --v:#4facfe; --ok:#43e97b; --bad:#ff6f6f; --line:#2c2c48;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(1200px 600px at 10% -10%,#2a1640 0%,transparent 60%),radial-gradient(900px 500px at 110% 10%,#0c2a4a 0%,transparent 60%),var(--bg);color:var(--txt);min-height:100vh;padding:env(safe-area-inset-top,0) 16px 40px}
+.wrap{max-width:980px;margin:0 auto}
+header{text-align:center;padding:28px 0 8px}
+h1{margin:0;font-size:clamp(26px,5vw,38px);letter-spacing:-.5px}
+h1 span{background:linear-gradient(90deg,var(--g),var(--v));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);margin-top:6px;font-size:14px}
+.status{font-size:13px;color:var(--mut);margin-top:10px;min-height:18px}
+.status.err{color:var(--bad)}
+.progress{margin:14px auto 0;max-width:520px}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--g),var(--v));width:0;transition:width .6s}
+.pmeta{display:flex;justify-content:space-between;color:var(--mut);font-size:12px;margin-top:6px}
+.score{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.p{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 18px;position:relative;overflow:hidden;text-align:center}
+.p::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--c)}
+.p.g{--c:var(--g)} .p.v{--c:var(--v)}
+.p .nome{font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:2px}
+.p .pts{font-size:clamp(48px,10vw,72px);font-weight:800;line-height:1.1;color:var(--c)}
+.p .lbl{font-size:12px;color:var(--mut)}
+.p .crown{position:absolute;top:12px;right:14px;font-size:18px;opacity:0}
+.p.lead .crown{opacity:1}
+.break{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--mut)}
+.break b{color:var(--txt)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:20px}
+.card h2{margin:0 0 14px;font-size:18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--mut)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input,select{background:var(--card2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:11px 12px;font-size:15px;width:100%;font-family:inherit}
+input:focus,select:focus{outline:2px solid var(--v);outline-offset:1px}
+.who{border-radius:14px;padding:12px;background:var(--card2);border:1px solid var(--line)}
+.who h3{margin:0 0 10px;font-size:14px}
+.who.g h3{color:var(--g)} .who.v h3{color:var(--v)}
+.who .field+.field{margin-top:8px}
+.hint{font-size:11px;color:var(--mut);margin-top:6px}
+button{border:0;border-radius:14px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;color:#0b0b14;background:linear-gradient(90deg,var(--g),var(--v));font-family:inherit}
+button:hover{filter:brightness(1.08)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;flex-wrap:wrap}
+.ghost{background:transparent;color:var(--mut);border:1px solid var(--line)}
+.msg{font-size:13px;color:var(--ok);min-height:18px;margin-top:8px}
+.tw{overflow-x:auto;margin-top:6px;border-radius:14px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:680px}
+th,td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+th{font-size:12px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.5px;background:var(--card2)}
+th.g{color:var(--g)} th.v{color:var(--v)}
+td.dt{text-align:left;font-weight:600}
+tr.today td{background:rgba(255,255,255,.04)}
+tr.empty td{color:#55557a}
+.pt{font-weight:800}
+.pt.g{color:var(--g)} .pt.v{color:var(--v)} .pt.t{color:var(--mut)}
+.chips{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px}
+.chip{background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:99px;padding:2px 8px;font-size:12px;font-weight:600}
+.chip:hover{border-color:var(--bad);color:var(--bad);filter:none}
+.del{background:none;color:var(--bad);border:0;padding:4px 6px;font-size:16px;cursor:pointer;box-shadow:none}
+.legend{font-size:12px;color:var(--mut);margin-top:12px;line-height:1.6}
+footer{text-align:center;color:#55557a;font-size:12px;margin-top:26px}
+@media (max-width:560px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Desafio de <span>Estudos</span></h1>
+  <div class="sub">Gabi &amp; Vinicius · 17/11/2026 → 18/12/2026</div>
+  <div class="status" id="status">Conectando…</div>
+  <div class="progress">
+    <div class="bar"><i id="bar"></i></div>
+    <div class="pmeta"><span id="pDias">0 de 32 dias registrados</span><span id="pRest"></span></div>
+  </div>
+</header>
+
+<section class="score">
+  <div class="p g" id="cardG">
+    <span class="crown">👑</span>
+    <div class="nome">Gabi</div>
+    <div class="pts" id="ptsG">0</div>
+    <div class="lbl">pontos</div>
+    <div class="break"><span>⏱️ tempo <b id="tG">0</b></span><span>📝 questões <b id="qG">0</b></span></div>
+  </div>
+  <div class="p v" id="cardV">
+    <span class="crown">👑</span>
+    <div class="nome">Vinicius</div>
+    <div class="pts" id="ptsV">0</div>
+    <div class="lbl">pontos</div>
+    <div class="break"><span>⏱️ tempo <b id="tV">0</b></span><span>📝 questões <b id="qV">0</b></span></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>📅 Registrar o dia</h2>
+  <div class="field" style="margin-bottom:14px">
+    <label for="data">Dia</label>
+    <select id="data"></select>
+  </div>
+  <div class="grid">
+    <div class="who g">
+      <h3>Gabi</h3>
+      <div class="field"><label>Tempo de estudo (define o total do dia)</label>
+        <div class="field-row">
+          <input id="gh" type="number" min="0" max="24" inputmode="numeric" placeholder="horas">
+          <input id="gm" type="number" min="0" max="59" inputmode="numeric" placeholder="minutos">
+        </div>
+      </div>
+      <div class="field"><label>Adicionar questões feitas</label>
+        <input id="gq" type="number" min="0" inputmode="numeric" placeholder="ex.: 10">
+      </div>
+    </div>
+    <div class="who v">
+      <h3>Vinicius</h3>
+      <div class="field"><label>Tempo de estudo (define o total do dia)</label>
+        <div class="field-row">
+          <input id="vh" type="number" min="0" max="24" inputmode="numeric" placeholder="horas">
+          <input id="vm" type="number" min="0" max="59" inputmode="numeric" placeholder="minutos">
+        </div>
+      </div>
+      <div class="field"><label>Adicionar questões feitas</label>
+        <input id="vq" type="number" min="0" inputmode="numeric" placeholder="ex.: 10">
+      </div>
+    </div>
+  </div>
+  <div class="hint">Pode registrar questões quantas vezes quiser no mesmo dia: cada envio soma. Campos de tempo vazios não alteram o tempo já salvo.</div>
+  <div class="actions">
+    <button class="ghost" id="limpar">Limpar</button>
+    <button id="salvar">Salvar</button>
+  </div>
+  <div class="msg" id="msg"></div>
+</section>
+
+<section class="card">
+  <h2>📊 Detalhes</h2>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Dia</th>
+          <th class="g">Gabi tempo</th><th class="g">Gabi questões</th>
+          <th class="v">Vinicius tempo</th><th class="v">Vinicius questões</th>
+          <th>Ponto tempo</th><th>Pontos do dia</th><th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="legend">
+    <b>Regras:</b> quem tiver mais minutos de estudo no dia ganha 1 ponto (empate não pontua). Cada 10 questões do dia valem 1 ponto, somando todos os registros do dia. Toque em um chip de questões para removê-lo.
+  </div>
+</section>
+
+<footer>Bons estudos, dupla! 💪</footer>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://tmjynnwiptapahgrkekn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_F5YsfduND0rKPXo4JUfvnA_RfAuu_Qu';
+
+const START = new Date(2026, 10, 17);
+const END   = new Date(2026, 11, 18);
+const DIAS_SEMANA = ['dom','seg','ter','qua','qui','sex','sáb'];
+const $ = id => document.getElementById(id);
+
+let sb = null;
+let rows = {};
+let busy = false;
+
+function iso(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function brDate(s){
+  const [y,m,d] = s.split('-');
+  const dt = new Date(+y, +m-1, +d);
+  return d+'/'+m+' · '+DIAS_SEMANA[dt.getDay()];
+}
+function allDays(){
+  const out=[]; const d=new Date(START);
+  while(d<=END){ out.push(iso(d)); d.setDate(d.getDate()+1); }
+  return out;
+}
+function fmt(min){ return Math.floor(min/60)+'h'+String(min%60).padStart(2,'0'); }
+
+function entry(p, day){
+  const r = rows[day];
+  if(!r) return {m:0, qs:[], tot:0};
+  const qs = (p==='g' ? r.g_qs : r.v_qs) || [];
+  return { m: p==='g' ? r.g_min : r.v_min, qs, tot: qs.reduce((a,b)=>a+b,0) };
+}
+function hasData(day){ return !!rows[day]; }
+function pontos(day){
+  const g=entry('g',day), v=entry('v',day);
+  const tG = g.m>v.m ? 1 : 0;
+  const tV = v.m>g.m ? 1 : 0;
+  const qG = Math.floor(g.tot/10), qV = Math.floor(v.tot/10);
+  return {g,v,tG,tV,qG,qV,G:tG+qG,V:tV+qV};
+}
+
+function setStatus(txt, err){
+  const s=$('status'); s.textContent=txt; s.classList.toggle('err', !!err);
+}
+function setMsg(txt){
+  $('msg').textContent=txt;
+  if(txt) setTimeout(()=>{ if($('msg').textContent===txt) $('msg').textContent=''; }, 2500);
+}
+
+function render(){
+  const days = allDays();
+  let totG=0,totV=0,tG=0,tV=0,qG=0,qV=0,logged=0;
+  for(const s of days){
+    if(!hasData(s)) continue;
+    logged++;
+    const p=pontos(s);
+    totG+=p.G; totV+=p.V; tG+=p.tG; tV+=p.tV; qG+=p.qG; qV+=p.qV;
+  }
+  $('ptsG').textContent=totG; $('ptsV').textContent=totV;
+  $('tG').textContent=tG; $('tV').textContent=tV;
+  $('qG').textContent=qG; $('qV').textContent=qV;
+  $('cardG').classList.toggle('lead', totG>totV);
+  $('cardV').classList.toggle('lead', totV>totG);
+
+  $('bar').style.width = Math.round(logged/days.length*100)+'%';
+  $('pDias').textContent = logged+' de '+days.length+' dias registrados';
+  const hoje = iso(new Date());
+  const restam = days.filter(s=>s>=hoje && !hasData(s)).length;
+  $('pRest').textContent = restam ? restam+' dias pela frente' : '';
+
+  $('tbody').innerHTML = days.map(s=>{
+    const cls = (s===hoje?'today ':'') + (!hasData(s)?'empty':'');
+    if(!hasData(s)){
+      return `<tr class="${cls}"><td class="dt">${brDate(s)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td></td></tr>`;
+    }
+    const p=pontos(s);
+    const ptTempo = p.tG? 'Gabi' : p.tV? 'Vinicius' : ((p.g.m||p.v.m) ? 'empate' : '—');
+    const cor = p.G>p.V?'g':p.V>p.G?'v':'t';
+    const qCell = who => {
+      const e=entry(who,s);
+      const chips = e.qs.map((n,i)=>
+        `<button class="chip" title="Remover" onclick="rmQ('${who}','${s}',${i})">${n} ×</button>`).join('');
+      return `<b>${e.tot}</b>${chips?`<div class="chips">${chips}</div>`:''}`;
+    };
+    return `<tr class="${cls}">
+      <td class="dt">${brDate(s)}</td>
+      <td>${(p.g.m||p.g.tot) ? fmt(p.g.m) : '—'}</td><td>${qCell('g')}</td>
+      <td>${(p.v.m||p.v.tot) ? fmt(p.v.m) : '—'}</td><td>${qCell('v')}</td>
+      <td>${ptTempo}</td>
+      <td><span class="pt ${cor}">${p.G} x ${p.V}</span><div style="font-size:11px;color:var(--mut)">tempo ${p.tG?'G':p.tV?'V':'-'} · questões G ${p.qG} V ${p.qV}</div></td>
+      <td><button class="del" title="Apagar o dia" onclick="apagarDia('${s}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+
+  const sel=$('data'); const atual=sel.value;
+  const hojeDay = days.includes(hoje) ? hoje : (days.find(s=>!hasData(s)) || days[0]);
+  sel.innerHTML = days.map(s=>`<option value="${s}" ${s===(atual||hojeDay)?'selected':''}>${brDate(s)}${hasData(s)?' ✓':''}</option>`).join('');
+}
+
+function limparCampos(){ ['gh','gm','gq','vh','vm','vq'].forEach(i=>$(i).value=''); }
+
+async function carregar(){
+  const {data, error} = await sb.from('registros').select('*');
+  if(error){ setStatus('Erro ao carregar: '+error.message, true); return; }
+  rows = {};
+  data.forEach(r=>{ rows[r.dia]=r; });
+  setStatus('Sincronizado ✓');
+  render();
+}
+
+async function gravar(dia, campos){
+  const atual = rows[dia] || {dia, g_min:0, g_qs:[], v_min:0, v_qs:[]};
+  const novo = {...atual, ...campos};
+  const {error} = await sb.from('registros').upsert(novo);
+  if(error) throw error;
+}
+
+async function salvar(){
+  if(busy) return;
+  const dia = $('data').value;
+  const campos = {};
+  let mudou=false;
+  for(const p of ['g','v']){
+    const h=$(p+'h').value, m=$(p+'m').value, q=parseInt($(p+'q').value,10);
+    const cur = entry(p,dia);
+    if(h!=='' || m!==''){
+      const mins = Math.max(0,parseInt(h||0,10))*60 + Math.min(59,Math.max(0,parseInt(m||0,10)));
+      if(mins!==cur.m){ campos[p+'_min']=mins; mudou=true; }
+    }
+    if(!isNaN(q) && q>0){
+      campos[p+'_qs'] = [...cur.qs, q]; mudou=true;
+    }
+  }
+  if(!mudou){ setMsg('Nada para salvar.'); return; }
+  busy=true; $('salvar').disabled=true;
+  try{
+    await gravar(dia, campos);
+    limparCampos();
+    setMsg('Salvo ✓');
+    await carregar();
+  }catch(e){
+    setStatus('Não foi possível salvar: '+(e.message||e), true);
+  }finally{
+    busy=false; $('salvar').disabled=false;
+  }
+}
+
+async function rmQ(p, dia, idx){
+  if(busy) return;
+  const cur = entry(p,dia);
+  busy=true;
+  try{
+    await gravar(dia, {[p+'_qs']: cur.qs.filter((_,i)=>i!==idx)});
+    await carregar();
+  }catch(e){ setStatus('Erro ao remover: '+(e.message||e), true); }
+  finally{ busy=false; }
+}
+
+async function apagarDia(dia){
+  if(!confirm('Apagar todos os registros de '+brDate(dia)+' (Gabi e Vinicius)?')) return;
+  try{
+    await sb.from('registros').delete().eq('dia', dia);
+    await carregar();
+  }catch(e){ setStatus('Erro ao apagar: '+(e.message||e), true); }
+}
+window.rmQ = rmQ;
+window.apagarDia = apagarDia;
+
+async function iniciar(){
+  if(!window.supabase){ setStatus('Não foi possível carregar a biblioteca. Verifique a internet.', true); return; }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  $('salvar').onclick = salvar;
+  $('limpar').onclick = limparCampos;
+  $('data').onchange = limparCampos;
+  render();
+  await carregar();
+  sb.channel('registros-ch')
+    .on('postgres_changes', {event:'*', schema:'public', table:'registros'}, ()=>carregar())
+    .subscribe();
+}
+iniciar();
+</script>
+</body>
+</html>
